@@ -34,3 +34,5 @@ L.tileLayer(
     }
 )
 ```
+
+## Take a look at the demo here: https://mediasuitenz.github.io/leaflet-mapbox-tilesize-demo/
