@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!--<base target="_top">-->
+    <base href="." target="_top" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Leaflet Tile Test</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+
+    <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0;
+      }
+      .leaflet-container {
+        height: calc(100% - 125px);
+      }
+	  .leaflet-tile {
+		border: 1px solid red
+	  }
+	  #message {
+		font-size: 50px;
+		text-align: center;
+	  }
+    </style>
+  </head>
+  <body>
+	<div>
+		<h1 id="message"></h1>
+	</div>
+    <div id="map"></div>
+    <script>
+      var map = new L.Map("map", {
+        center: [-40.847, 172.859],
+        zoom: 6,
+      });
+
+	  // Replace these with your own if you're wanting to test a specific Mapbox style
+	  // The token will need to be valid for the style you use, especially if it's a private style
+	  var accessToken = 'pk.eyJ1IjoibGVjdG9yd291dGVyIiwiYSI6ImNrM25qZWs1dTB4NHgza240bW0zOG1qZngifQ.1uF5JjJA8l5SpTW3NVQJJQ'
+	  var styleId = 'mapbox/streets-v11'
+	  var attribution = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>'
+
+      var waster = L.tileLayer(
+        "https://api.mapbox.com/styles/v1/{id}/tiles/256/{z}/{x}/{y}?access_token={accessToken}",
+        {
+		  id: styleId,
+          accessToken,
+		  attribution,
+		}
+      )
+
+	  var cheap = L.tileLayer(
+		// @2x retrieves 1024px tiles, mapbox scales to 512 due to tileSize
+		"https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}@2x?access_token={accessToken}",
+		{
+		  id: styleId,
+          accessToken,
+		  tileSize: 512,
+		  zoomOffset: -1,
+		  attribution,
+		}
+	  )
+
+	  // Calculate number of tiles loaded for the current active basemap
+	  var tilesLoaded = 0
+
+	  cheap.on('add', () => {
+		tilesLoaded = 0
+		cheap.redraw()
+	  })
+	  cheap.on('tileload', (tileEvent) => {
+		tilesLoaded++
+		document.getElementById('message').innerText = `Loading tiles... ${tilesLoaded}`
+	  })
+	  cheap.on('load', () => {
+		document.getElementById('message').innerText = `Tiles for cheap map load: ${tilesLoaded}`
+	  })
+
+	  waster.on('add', () => {
+		tilesLoaded = 0
+		waster.redraw()
+	  })
+	  waster.on('tileload', (tileEvent) => {
+		tilesLoaded++
+		document.getElementById('message').innerText = `Loading tiles... ${tilesLoaded}`
+	  })
+	  waster.on('load', () => {
+		document.getElementById('message').innerText = `Tiles for spendy map load: ${tilesLoaded}`
+	  })
+
+	  // Set up layer control
+	  L.control
+	  	.layers({ 'Spendy': waster, 'Cheap': cheap }, {}, { collapsed: false })
+	    .addTo(map);
+
+	  // Start off with wasteful layer visible
+	  map.addLayer(waster)
+    </script>
+  </body>
+</html>
